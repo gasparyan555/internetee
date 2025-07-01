@@ -9,8 +9,7 @@
     body {
       margin: 0;
       font-family: 'Fredoka', sans-serif;
-      background: url('https://i.imgur.com/mUiCz0p.jpg') no-repeat center center fixed;
-      background-size: cover;
+      background: #000000;
       color: #fff;
       text-align: center;
       -webkit-font-smoothing: antialiased;
@@ -24,12 +23,12 @@
       padding: 20px;
     }
     .container {
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.8);
       padding: 30px;
       border-radius: 20px;
       max-width: 400px;
       width: 100%;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.9);
     }
     h1 {
       margin-bottom: 20px;
@@ -72,7 +71,7 @@
     .cell {
       width: 44px;
       height: 44px;
-      background: #4a4e69;
+      background: #222;
       border-radius: 8px;
       display: flex;
       justify-content: center;
@@ -81,7 +80,7 @@
       font-size: 20px;
       color: #fff;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.7);
       transition: background-color 0.2s ease;
       user-select: none;
     }
@@ -175,7 +174,7 @@
 </audio>
 
 <script>
-(async () => {
+(() => {
   const permissionDeniedDiv = document.getElementById('permission-denied');
   const startForm = document.getElementById('start-form');
   const gameArea = document.getElementById('game-area');
@@ -342,9 +341,8 @@
     if (!playerName) return alert('Խնդրում ենք մուտքագրել անունը։');
 
     startBtn.disabled = true;
-    bgMusic.volume = 0.15;
     try {
-      // Запускаем музыку после клика
+      bgMusic.volume = 0.15;
       await bgMusic.play();
     } catch {}
 
